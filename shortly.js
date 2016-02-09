@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var bcrypt = require('bcrypt-nodejs');
 var escape = require('escape-html');
+var cookieParser = require('cookie-parser');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -14,6 +15,7 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+app.use(cookieParser('asdf1234'));
 app.use(session({
   secret: "asdf1234"
 }));
@@ -118,7 +120,8 @@ app.post('/login', function(req, res) {
   User.where('username', '=', escape(username))
     .fetch()
     .then(function(user){ 
-      if(user){    
+      if(user){
+
         var salt = user.get('salt');
         bcrypt.compare(password, user.get('password'), function (err, result) {
           if (result) {
@@ -143,14 +146,14 @@ app.post('/signup', function (req, res) {
     .fetch()
     .then(function (model){
       if (!model) {
-        var salt = bcrypt.genSaltSync(10);
-        var hash = bcrypt.hashSync(password, salt);
+        // var salt = bcrypt.genSaltSync(10);
+        // var hash = bcrypt.hashSync(password, salt);
 
         new User({
-          'username': username,
-          'salt': salt,
-          'password': hash
-        }).save().then(function() {
+          'username': username
+          // 'salt': salt,
+          //'password': password
+        }).save({username: username, password: password}).then(function() {
           req.session.regenerate(function() {
             req.session.username = username;
             res.redirect('/');
