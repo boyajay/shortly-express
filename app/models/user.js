@@ -13,12 +13,8 @@ var User = db.Model.extend({
 		return this.hasMany(Link);
 	},
 
-	encryptPass: function(pass){
-		var salt = bcrypt.genSaltSync(10);
-		var hash = bcrypt.hashSync(pass, salt);
-
-		// call func to store salt
-		// call func to store hash
+	encryptPass: function(pass, salt){
+		return bcrypt.hashSync(pass, salt);
 	}	
 
 

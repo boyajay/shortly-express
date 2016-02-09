@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -12,6 +13,9 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+app.use(session({
+  secret: 'asdf1234'
+}));
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -21,7 +25,7 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-
+// app.use(express.session());
 
 app.get('/', 
 function(req, res) {
@@ -75,9 +79,71 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/login', 
+function(req, res) {
+  res.render('login');
+});
+
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
+app.get('/logout', 
+function(req, res) {
+  req.session.destroy(function(){
+    res.redirect('login');
+  });
+});
 
 
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password =req.body.password;
+  User.where('username', '=', User.escape(username))
+    .fetch()
+    .then(function(model){ 
+      console.log('model returns ', model);
+      //req.session.username =username;
 
+    });  //TBC
+
+  var salt = '';
+  //hash of password+salt = db.password
+
+});
+
+app.post('/signup', function (req, res) {
+  var username = req.body.username;
+  var password =req.body.password;
+  User.where('username', '=', username)
+    .fetch()
+    .then(function (model){
+      console.log('model returns ', model);
+      if (!model) {
+        var salt = bcrypt.genSaltSync(10);
+        var password = User.encryptPass(password, salt);
+
+        new User({
+          'username': username,
+          'salt': salt,
+          'password': password
+        }).save().then(function() {
+          // create session with user
+          // redirect to index
+        });
+
+
+      } else {
+        console.log('redirecting');
+       res.redirect('/login');
+      }
+    });  //TBC
+
+  var salt = '';
+  //hash of password+salt = db.password
+
+});
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.
@@ -102,6 +168,7 @@ app.get('/*', function(req, res) {
     }
   });
 });
+
 
 console.log('Shortly is listening on 4568');
 app.listen(4568);
